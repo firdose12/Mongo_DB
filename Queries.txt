@@ -1,0 +1,140 @@
+MongoDB Queries 
+
+Sample_Data : {
+		  title: "Who can suggest best computer coding book for beginners?",
+		  postId: NumberInt(8451),
+		  comments: 2,
+		  shared: false,
+		  tags: [
+			"programming",
+			"coding"
+		  ],
+		  author: {
+			name: "Emily Watson",
+			nickname: "emily23"
+		  }
+		}
+
+1. find : find    ->     db.getCollection("user2").find({})  - returns all documents 
+		  findOne ->     db.getCollection("Sample_Data").findOne({postId:3511}) - search using particular object
+		  insideObject-> db.getCollection("Sample_Data").findOne({"author.name":"Emily Watson"}	-> you have to add "" to key here
+		  usingArray -> db.getCollection("Sample_Data").findOne({tags:"programming"})
+		
+	
+2. insert : 
+		const doc = {
+					  title: "What is the best way to learn JavaScript from the ground up?",
+					  postId: NumberInt(3511),
+					  comments: 10,
+					  shared: true,
+					  tags: [
+						"JavaScript",
+						"programming"
+					  ],
+					  author: {
+						name: "Mike Forester",
+						nickname: "mikef"
+					  }
+					}
+        db.user2.insertOne(doc);
+		
+	inserMany : required an Array
+					const docArray = [{
+									  title: "What is the best way to learn JavaScript from the ground up?",
+									  postId: NumberInt(3511),
+									  comments: 10,
+									  shared: true,
+									  tags: [
+										"JavaScript",
+										"programming"
+									  ],
+									  author: {
+										name: "Mike Forester",
+										nickname: "mikef"
+									  }
+									},{
+									  title: "My thoughts about 12-factor App Methodology",
+									  postId: NumberInt(2618),
+									  comments: 0,
+									  shared: false,
+									  tags: [],
+									  author: {
+										name: "Emily Watson",
+										nickname: "emily23"
+									  }
+									}]
+			db.user2.insertMany(docArray)
+			
+3. Query Operators : 
+  
+       $or , $and , $lt , $eq , $ne , $gt , $in , $nin , $regex
+	   
+	find all the documents with non-zero comments ( comments value > 0 ) : db.getCollection("Sample_Data").find({comments:{$gt:0}})
+	find all the documents with comments < 5 : db.getCollection("Sample_Data").find({comments:{$lt:5}})
+	find all the documents with comments <5 & > 0 , $and required array of operators :
+		    db.getCollection("Sample_Data").find({ $and : [{comments:{$gt:0}},{comments:{$lt:5}}] })
+	find all the documents where shared = true || have programming tag : 
+			db.getCollection("Sample_Data").find({$or : [{shared : false},{tags:"programming"}]})
+	find all the documents which contains programming/coding in a tags array , $in is used for array to find whether the elemetns we pass exists in array or not :
+			db.getCollection("Sample_Data").find({tags:{$in:["programming","coding"]}})
+
+4. Helper Methods : Sort() , limit() , skip()
+	limit() : it will limit the document with the number you have provided :
+			  db.getCollection("Sample_Data").find({}).limit(1)
+	skip() : it will skip the first number of document which you provide  , below query will skip first document :
+			  db.getCollection("Sample_Data").find({}).skip(1)
+
+    sort() : requires object as value 1 -> ascending Order , -1 -> descending Order
+			 sort by comments in ascending order : db.getCollection("Sample_Data").find({}).sort({comments:1})
+			 sort by comments in descending order : db.getCollection("Sample_Data").find({}).sort({comments:-1})
+			 by default mongo db sort the documents with order_Id in ascending order
+	Task : skip first 2 documents and sort by shared field in ascending order :
+			db.getCollection("Sample_Data").find({}).skip(2).sort({shared:1})
+			
+5. Update Operations :  (<query> , <update> , <options>)
+	update Operators used in  <update>  Argument are : $set , $rename , $unset, $currentDate , $inc , $addToSet
+	updateOne  : 
+			find a document whos postId is 8451 and set shared to true : db.Sample_Data.updateOne({postId:8451},{$set:{shared:true}})
+			find a document whos postId is 8451 and set the title to Who can suggest best computer coding book for Seniors? :
+			        db.Sample_Data.updateOne({postId:8451},{$set:{title:'Who can suggest best computer coding book for Seniors'}})         
+	updateMany : 
+			update all the documents whos tags value is empty [] , we have to use $unset :
+			db.Sample_Data.updateMany({tags:[]},{$unset:{tags:1}})
+	Task : find a document whos postId is 8451 and increment the comments by 6
+	        db.Sample_Data.updateMany({postId:8451},{$inc:{comments:6}})
+			
+6. Delete Operations : 
+	deleteOne: db.getCollection("Sample_Data").deleteOne({postId:1111});
+	deleteMany: find documents and delete which does not have title , use exists operator to check whether a key present or not 
+				db.getCollection("Sample_Data").deleteMany({title:{$exists:false}})
+				
+
+7. Aggregation FrameWork : 
+		purpose of documents  : 	
+								1. you can find subset of the collections and produce brand new collection at the end.
+								2. you can find all the distint values in an array. 
+								3. you can find all values of the comments field / all titles in the documents and so on.
+		Syntax : aggregate([{},{}...]) -> Array of Objects.
+		Examples : 
+			1.get list of only author names
+				db.Sample_Data.aggregate([{$group:{_id:"$author.name"}}]):
+			  Output : { _id: 'Mike Forester' }
+					   { _id: 'Emily Watson' } , you will get all distint values of author name
+			
+8. MongoDB Indexes : 
+		In each collection there is a default index which is _id and ascending 
+		you have to create indexes for the most used fileds 
+		example , if you do db.Sample_Data.findOne({"_id": ObjectId("8uywuw88782932jh")}) -> this is searching through index
+	
+9. MongoDB Utilities : 
+	mongoexport : 
+		syntax : mongoexport -d Insured_Claims -c Sample_Data -o posts.txt -> will create posts.txt file
+	mongoimport :
+	mongodump : 
+	   syntax : mongodump -> create a copy of all the database
+	mongorestore: 
+	
+10. MongoDB Replica Sets : if you want to set up mongodb in production you should have a replica sets , we should have 1 primary and multiple secondary
+
+		   
+	           
